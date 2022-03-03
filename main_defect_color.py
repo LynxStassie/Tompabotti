@@ -99,14 +99,15 @@ while True:
     plt.rcParams['figure.figsize'] = [12, 6]
     #plt.imshow(color)
     #plt.show()
-    colorizer = rs.colorizer()
-    colorized_depth = np.asanyarray(colorizer.colorize(depth_frame).get_data())
+    # colorizer = rs.colorizer()
+    # colorized_depth = np.asanyarray(colorizer.colorize(depth_frame).get_data())
     #plt.imshow(colorized_depth)
     #plt.show()
 
     colorizer = rs.colorizer()
     colorized_depth = np.asanyarray(colorizer.colorize(depth_frame).get_data())
-    #plt.imshow(colorized_depth)
+    colorized_depthColorMap=cv.applyColorMap(cv.convertScaleAbs(colorized_depth, alpha=14), cv.COLORMAP_OCEAN)
+    #plt.imshow(colorized_depthColorMap)
     #plt.show()
 
     # Create alignment primitive with color as its target stream:
@@ -166,83 +167,7 @@ while True:
     # Remove the bounding boxes with low confidence
     postprocess(timg, qualify_result, outs, tconfThreshold, tnmsThreshold)
 
-    # first_pass = False
-    # #############################################################################################
-    #
-    # # Load network for defect recognition
-    # net = cv.dnn.readNetFromDarknet(dmodelConfiguration, dmodelWeights)
-    # net.setPreferableBackend(cv.dnn.DNN_BACKEND_OPENCV)
-    # net.setPreferableTarget(cv.dnn.DNN_TARGET_CPU)
-    #
-    # # Defects detection loop
-    # # Loop over each cropped image
-    # l = 0
-    # for dimg in crop_imgs:
-    #     # Create a 4D blob from a frame.
-    #     blob = cv.dnn.blobFromImage(dimg, 1 / 255, (dinpWidth, dinpHeight), [0, 0, 0], 1, crop=False)
-    #
-    #     # Sets the input to the network
-    #     net.setInput(blob)
-    #
-    #     # Runs the forward pass to get output of the output layers
-    #     outs = net.forward(getOutputsNames(net))
-    #
-    #     # Remove the bounding boxes with low confidence
-    #     postprocess(dimg,qualify_result, outs, dconfThreshold, dnmsThreshold)
 
-   #  # Check if the rectangle of defects are inside of rectangle of tomato
-   #  for tomato in rectangle_of_tomatoes:
-   #      # print('tomato:',tomato)
-   #      ax = tomato[0]
-   #      ay = tomato[1]
-   #      w = tomato[2]
-   #      h = tomato[3]
-   #      cx = tomato[0] + tomato[2]
-   #      cy = tomato[1] + tomato[3]
-   #      nondefect_tomatoes.append(tomato)
-   #      # Uncommented to test the pedicel detection on all tomato
-   #      # bads.append(tomato)
-   #
-   #      for defect in rectangle_of_defects:
-   #          wx = defect[0]
-   #          wy = defect[1]
-   #          ax_increased = ax - defect[2]
-   #          ay_increased = ay - defect[3]
-   #          if cx > wx > ax_increased and cy > wy > ay_increased:
-   #              drawBad(qualify_result,ax, ay, cx, cy)
-   #              #nondefect_tomatoes.remove(tomato)
-   #              bad_tomatoes.append(tomato)
-   #
-   #  # Remove repeated tomato in list 'nondefect_tomato'
-   #  nondefect_tomatoes = [i for n, i in enumerate(nondefect_tomatoes) if i not in nondefect_tomatoes[:n]]
-   #
-   #  # Show result of defect-qualifying
-   #  #print(nondefect_tomatoes)
-   #  show_process_image('Qualify result', qualify_result)
-   # # qualify_result
-   #  # Color classify the nondefect tomatoes
-   #  for nondefect_tomato in nondefect_tomatoes:
-   #      crop_img = qualify_image[nondefect_tomato[1]:nondefect_tomato[1] + nondefect_tomato[2],
-   #             nondefect_tomato[0]:nondefect_tomato[0] + nondefect_tomato[3]]
-   #
-   #      # result = color_classify(crop_img, rate=0.48)
-   #      # if result == False:
-   #      #     bad_tomatoes.append(nondefect_tomato)
-   #      #     drawBad(qualify_result,nondefect_tomato[0],nondefect_tomato[1],nondefect_tomato[0]+nondefect_tomato[2],nondefect_tomato[1]+nondefect_tomato[3])
-   #
-   #  # Remove repeated tomato in list 'bad_tomatoes'
-   #  bad_tomatoes = [i for n, i in enumerate(bad_tomatoes) if i not in bad_tomatoes[:n]]
-   #
-   #  # Show result of total-qualifying
-   #  show_process_image('Qualify result', qualify_result)
-    # print('Qualify time:',time.time() - start_qualify_time)
-
-    # if not bad_tomatoes:
-    #     bad_tomato_coordinates = []
-    #     print('Do not need to cut')
-    #
-    # else:# Detect pedicel of the bad tomato and process the coordinates
-#qualify_result aligned_depth_frame
     bad_tomato_coordinates = coords(rectangle_of_tomatoes, qualify_result ,qualify_image,profile,outs,colorized_depth,frameset)
 
 

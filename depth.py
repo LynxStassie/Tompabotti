@@ -12,6 +12,10 @@ cfg.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
 cfg.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
 profile = pipe.start(cfg)
 
+
+
+
+
 # Skip 5 first frames to give the Auto-Exposure time to adjust
 for x in range(5):
     pipe.wait_for_frames()
@@ -29,7 +33,7 @@ color = np.asanyarray(color_frame.get_data())
 plt.rcParams["axes.grid"] = False
 plt.rcParams['figure.figsize'] = [12, 6]
 plt.imshow(color)
-#plt.show()
+#lt.show()
 colorizer = rs.colorizer()
 colorized_depth = np.asanyarray(colorizer.colorize(depth_frame).get_data())
 plt.imshow(colorized_depth)
@@ -42,6 +46,9 @@ frameset = align.process(frameset)
 # Update color and depth frames:
 aligned_depth_frame = frameset.get_depth_frame()
 colorized_depth = np.asanyarray(colorizer.colorize(aligned_depth_frame).get_data())
+
+
+
 
 # Show the two frames together:
 images = np.hstack((color, colorized_depth))
@@ -71,10 +78,10 @@ detections = net.forward("detection_out")
 
 label = detections[0,0,0,1]
 conf  = detections[0,0,0,2]
-xmin  = 200#detections[0,0,0,3]
-ymin  = 100#detections[0,0,0,4]
-xmax  = 300#detections[0,0,0,5]
-ymax  = 400#detections[0,0,0,6]
+xmin  = detections[0,0,0,3]
+ymin  = detections[0,0,0,4]
+xmax  = detections[0,0,0,5]
+ymax  = detections[0,0,0,6]
 
 className = classNames[int(label)]
 print(crop_img)
@@ -86,7 +93,7 @@ cv2.putText(crop_img, className,
 
 show_process_image('Start qualify',crop_img)
 
-scale = height / expected / 1000
+scale = height / expected
 xmin_depth = int((xmin * expected + crop_start) * scale)
 ymin_depth = int((ymin * expected) * scale)
 xmax_depth = int((xmax * expected + crop_start) * scale)
@@ -104,6 +111,7 @@ depth = depth[xmin_depth:xmax_depth,ymin_depth:ymax_depth].astype(float)
 # Get data scale from the device and convert to meters
 depth_scale = profile.get_device().first_depth_sensor().get_depth_scale()
 depth = depth * depth_scale
+print("Depth Scale is: " , depth_scale)
 dist,_,_,_ = cv2.mean(depth)
 
 print("Detected a {0} {1:.3} meters away. and xmin={2} xmin_depth={3} xmax={4} xmin={5} xmax_depth={6}".format(className, dist, xmin,xmin_depth,xmax,xmax_depth,1))

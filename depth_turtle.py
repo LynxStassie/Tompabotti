@@ -44,7 +44,7 @@ try:
         # depth_image_3d = np.dstack((depth_image,depth_image,depth_image))
         # print(np.shape(depth_image))
         # print(np.shape(color_image))
-        depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_OCEAN)
+        depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=1), cv2.COLORMAP_OCEAN)
         # depth_colormap_3d = np.dstack((depth_colormap,depth_colormap,depth_colormap))
         # depth_colormap = cv2.cvtColor(np.float32(depth_colormap))
                 # cv2.imshow(title, color_frame)

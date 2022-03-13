@@ -171,10 +171,11 @@ while True:
     postprocess(timg, qualify_result, outs, tconfThreshold, tnmsThreshold)
 
 
-    bad_tomato_coordinates = coords(rectangle_of_tomatoes, qualify_result ,qualify_image,profile,outs,depth_frame,frameset)
+    bad_tomato_coordinates = coords(rectangle_of_tomatoes, qualify_result ,qualify_image,depth_image)
 
 
     # print(bad_tomato_coordinates)
+    # print(bad_tomato_coordinates)s
 
     if bad_tomato_coordinates == []:
         print('Cannot find any pedicel to cut')

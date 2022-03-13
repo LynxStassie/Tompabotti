@@ -107,21 +107,21 @@ while True:
     colorizer = rs.colorizer()
     colorized_depth = np.asanyarray(colorizer.colorize(depth_frame).get_data())
     colorized_depthColorMap=cv.applyColorMap(cv.convertScaleAbs(colorized_depth, alpha=14), cv.COLORMAP_OCEAN)
-    #plt.imshow(colorized_depthColorMap)
-    #plt.show()
+    plt.imshow(colorized_depthColorMap)
+    plt.show()
 
     # Create alignment primitive with color as its target stream:
     align = rs.align(rs.stream.color)
     frameset = align.process(frames)
 
-    # Update color and depth frames:
-    aligned_depth_frame = frameset.get_depth_frame()
-    colorized_depth = np.asanyarray(colorizer.colorize(aligned_depth_frame).get_data())
+    # # Update color and depth frames:
+    # aligned_depth_frame = frameset.get_depth_frame()
+    # colorized_depth = np.asanyarray(colorizer.colorize(aligned_depth_frame).get_data())
 
     # Show the two frames together:
     images = np.hstack((color, colorized_depth))
     plt.imshow(images)
-    #plt.show()
+    plt.show()
 #=====
 
     # Create alignment primitive with color as its target stream:
@@ -129,6 +129,8 @@ while True:
     frameset = align.process(frames)
     aligned_depth_frame = frameset.get_depth_frame()
     color_image = np.asanyarray(color_frame.get_data())
+    # depth_image = np.asanyarray(aligned_depth_frame.get_data())
+    depth_image = np.asanyarray(depth_frame.get_data())
     pipeline.stop()
     qualify_image = color_image
 
@@ -140,13 +142,14 @@ while True:
     show_process_image('Start qualify',qualify_result)
 
     first_pass = True
-    # Create neccessary lists
+    # Create necessary lists
     crop_imgs = [] #crop images for each single tomato
     rectangle_of_tomatoes = [] #coordinate of each tomato
     rectangle_of_defects = [] #coordinate of each defect
     nondefect_tomatoes = [] #list of tomatoes dont have defects on it
     bad_tomatoes = [] #list of bad tomatoes
 
+    # Neural Net
     #############################################################################################
     net = cv.dnn.readNetFromDarknet(tmodelConfiguration, tmodelWeights)
     net.setPreferableBackend(cv.dnn.DNN_BACKEND_OPENCV)
@@ -168,7 +171,7 @@ while True:
     postprocess(timg, qualify_result, outs, tconfThreshold, tnmsThreshold)
 
 
-    bad_tomato_coordinates = coords(rectangle_of_tomatoes, qualify_result ,qualify_image,profile,outs,colorized_depth,frameset)
+    bad_tomato_coordinates = coords(rectangle_of_tomatoes, qualify_result ,qualify_image,profile,outs,depth_frame,frameset)
 
 
     # print(bad_tomato_coordinates)

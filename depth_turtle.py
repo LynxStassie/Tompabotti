@@ -7,8 +7,10 @@ import cv2
 # Create a pipeline
 pipeline = rs.pipeline()
 config = rs.config()
-config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
-config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+
+
+config.enable_stream(rs.stream.depth, 848, 480, rs.format.z16, 30)
+config.enable_stream(rs.stream.color, 848, 480, rs.format.bgr8, 30)
 
 profile = pipeline.start(config)
 # Getting the depth sensor's depth scale (see rs-align example for explanation)
@@ -17,7 +19,9 @@ profile = pipeline.start(config)
 # print("Depth Scale is: " , depth_scale)
 
 depth_sensor = profile.get_device().first_depth_sensor()
-
+auto_expl = depth_sensor.get_option(rs.option.enable_auto_exposure)
+print("ae=",auto_expl)
+auto_expl = 2.0
 laser_pwr = depth_sensor.get_option(rs.option.laser_power)
 print("laser power = ", laser_pwr)
 # print(depth_sensor.get_option_range(rs.option.min_distance))
@@ -44,7 +48,7 @@ try:
         # depth_image_3d = np.dstack((depth_image,depth_image,depth_image))
         # print(np.shape(depth_image))
         # print(np.shape(color_image))
-        depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=1), cv2.COLORMAP_OCEAN)
+        depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.8), cv2.COLORMAP_JET)
         # depth_colormap_3d = np.dstack((depth_colormap,depth_colormap,depth_colormap))
         # depth_colormap = cv2.cvtColor(np.float32(depth_colormap))
                 # cv2.imshow(title, color_frame)

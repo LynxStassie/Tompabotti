@@ -502,7 +502,9 @@ def pedicel_info_process(tomato_boxes, color_image, result_image):
     return pedicel_tomato_coordinates
 
 
-def coords(tomato_boxes, color_image, result_image, profile, outs, aligned_depth_frame, frameset): #,depth_frame, frameset,aligned_depth_frame):
+def coords(tomato_boxes, color_image, result_image, profile, outs, colorized_depth, frameset): #,depth_frame, frameset,aligned_depth_frame):
+    # находит координаты центра квадрата из tomato_boxes
+    # координаты x , y - это координаты пикселя в матрице, это координаты центра бокса из
     if tomato_boxes == None:
         pedicel_tomato_coordinates = None
 
@@ -515,20 +517,22 @@ def coords(tomato_boxes, color_image, result_image, profile, outs, aligned_depth
 
             xmin = tomato_box[0]
             ymin = tomato_box[1]
-            xmax = tomato_box[0]+tomato_box[2] # xmin + weight
+            xmax = tomato_box[0]+tomato_box[2] # xmin + width
             ymax = tomato_box[1] + tomato_box[3] # ymin + height
 
 
-            (m,n) = (int((xmin+xmax)/2), int((ymin+ymax)/2))
+            (m,n) = (int((xmin+xmax)/2), int((ymin+ymax)/2)) # toouple of coords of center of the box with tomato
             cv.circle(result_image, (m, n), 4, (0, 255, 255), 5)
 
             (i, j) = (m,n)#pedicel_coor_convert(tomato_box, pedicel[0], pedicel[2])
             print('coordinate detected')
 
-            distance = getDist(xmin, ymin, xmax, ymax)
+
             # Print out coordinates
             x_coord = (m,n)[0]
             y_coord = (m,n)[1]
+            distance = getDist2(x_coord,y_coord,colorized_depth)
+            #distance = aligned_depth_frame[x_coord,y_coord].astype(float)
             print('x:', x_coord)#cut_coordinate[0])
             print('y:', y_coord)#cut_coordinate[1])
             print('z:', distance)
@@ -543,6 +547,64 @@ def coords(tomato_boxes, color_image, result_image, profile, outs, aligned_depth
             plt.show()
   #  (i - 30, j + 20)
     return pedicel_tomato_coordinates
+
+
+def getDist2(m,n,depth_img):
+    frame_width = 1280
+    frame_heigth = 720
+    pipeline2=rs.pipeline()
+    config.enable_stream(rs.stream.depth, frame_width, frame_heigth, rs.format.z16, 30)
+    config.enable_stream(rs.stream.color, frame_width, frame_heigth, rs.format.bgr8, 30)
+
+    profile = pipeline2.start(config)
+    # Getting the depth sensor's depth scale (see rs-align example for explanation)
+    # depth_sensor = profile.get_device().first_depth_sensor()
+    # depth_scale = depth_sensor.get_depth_scale()
+    # print("Depth Scale is: " , depth_scale)
+
+    depth_sensor = profile.get_device().first_depth_sensor()
+    auto_expl = depth_sensor.get_option(rs.option.enable_auto_exposure)
+    print("ae=",auto_expl)
+    auto_expl = 2.0
+    laser_pwr = depth_sensor.get_option(rs.option.laser_power)
+    print("laser power = ", laser_pwr)
+    # print(depth_sensor.get_option_range(rs.option.min_distance))
+    # print("laser power range = " , laser_range.min , "~", laser_range.max)
+    set_laser = 8
+    # depth_sensor.set_option(rs.option.min_distance, 0.25)
+    depth_scale = depth_sensor.get_depth_scale()
+    print(depth_sensor.get_depth_scale())
+    title = 'mouse event'
+
+
+    # Wait for a coherent pair of frames: depth and color
+    frames = pipeline2.wait_for_frames()
+    depth_frame = frames.get_depth_frame()
+    color_frame = frames.get_color_frame()
+
+
+    # Convert images to numpy arrays
+    depth_image = np.asanyarray(depth_frame.get_data())
+    color_image = np.asanyarray(color_frame.get_data())
+    # depth_image_3d = np.dstack((depth_image,depth_image,depth_image))
+    # print(np.shape(depth_image))
+    # print(np.shape(color_image))
+    depth_colormap = cv.applyColorMap(cv.convertScaleAbs(depth_image, alpha=4), cv.COLORMAP_JET)
+    # depth_colormap_3d = np.dstack((depth_colormap,depth_colormap,depth_colormap))
+    # depth_colormap = cv2.cvtColor(np.float32(depth_colormap))
+    # cv2.imshow(title, color_frame)
+    # cv2.imshow(title,color_image)
+    cv.circle(color_image, (m, n), 4, (255, 255, 255), 5)
+    cv.circle(depth_img, (m, n), 4, (255, 255, 255), 5)
+    cv.imshow(title, color_image)
+
+    cv.imshow(title, depth_img)
+
+
+    depth = depth_img[m, n].astype(float)
+    return depth
+
+
 
 def getDist(xmin, ymin,xmax, ymax):
     # Setup:

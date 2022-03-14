@@ -502,9 +502,10 @@ def pedicel_info_process(tomato_boxes, color_image, result_image):
     return pedicel_tomato_coordinates
 
 
-def coords(tomato_boxes, color_image, result_image, depth_image): #,depth_frame, frameset,aligned_depth_frame):
-    # находит координаты центра квадрата из tomato_boxes
-    # координаты x , y - это координаты пикселя в матрице, это координаты центра бокса из
+def coords(tomato_boxes, color_image, result_image, depth_image,profile): #,depth_frame, frameset,aligned_depth_frame):
+    # find center of box from tomato_boxes
+    # coordinates x , y - pixel coordinates, box center
+    #cv.imshow("title", depth_image)
     if tomato_boxes == None:
         pedicel_tomato_coordinates = None
 
@@ -531,8 +532,25 @@ def coords(tomato_boxes, color_image, result_image, depth_image): #,depth_frame,
             # Print out coordinates
             x_coord = (m,n)[0]
             y_coord = (m,n)[1]
-            distance = getDist2(x_coord,y_coord,depth_image,color_image)
-            #distance = aligned_depth_frame[x_coord,y_coord].astype(float)
+            #distance = getDist2(x_coord,y_coord,depth_image,color_image)
+            cv.circle(color_image, (m, n), 4, (255, 255, 255), 5)
+            #cv.circle(depth_image, (m, n), 4, (255, 255, 255), 5)
+            # depth = depth_image[n, m].astype(float)
+            print("gettting center coords ", n , m)
+            depth_sensor = profile.get_device().first_depth_sensor()
+            depth_scale = depth_sensor.get_depth_scale()
+            title = 'mouse event'
+            cv.imshow(title, color_image)
+            depth_colormap = cv.applyColorMap(cv.convertScaleAbs(depth_image, alpha=0.8), cv.COLORMAP_JET)
+
+            depth = depth_image[n, m].astype(float)
+            print(m, n)
+            distance = depth * depth_scale
+            print("Distance (m): ", distance)
+
+
+
+            # distance = depth * depth_scale
             print('x:', x_coord)#cut_coordinate[0])
             print('y:', y_coord)#cut_coordinate[1])
             print('z:', distance)
@@ -544,12 +562,12 @@ def coords(tomato_boxes, color_image, result_image, depth_image): #,depth_frame,
             cv.putText(result_image, y_label, (i - 30, j), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             cv.putText(result_image, z_label, (i - 30, j + 20), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             plt.imshow(result_image)
-            plt.show()
+            #plt.show()
   #  (i - 30, j + 20)
     return pedicel_tomato_coordinates
 
 
-def getDist2(m,n,depth_img,color_img):
+# def getDist2(m,n,depth_img,color_img):
     # frame_width = 1280
     # frame_heigth = 720
     # pipeline2=rs.pipeline()
@@ -594,15 +612,15 @@ def getDist2(m,n,depth_img,color_img):
     # # depth_colormap = cv2.cvtColor(np.float32(depth_colormap))
     # # cv2.imshow(title, color_frame)
     # # cv2.imshow(title,color_image)
-    cv.circle(color_img, (m, n), 4, (255, 255, 255), 5)
-    cv.circle(depth_img, (m, n), 4, (255, 255, 255), 5)
-    cv.imshow("title", color_img)
-
-    cv.imshow("title", depth_img)
-
-
-    depth = depth_img[m, n].astype(float)
-    return depth
+    # cv.circle(color_img, (m, n), 4, (255, 255, 255), 5)
+    # cv.circle(depth_img, (m, n), 4, (255, 255, 255), 5)
+    # cv.imshow("title", color_img)
+    #
+    # cv.imshow("title", depth_img)
+    #
+    #
+    # depth = depth_img[m, n].astype(float)
+    # return depth
 
 
 

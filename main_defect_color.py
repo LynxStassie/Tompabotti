@@ -94,6 +94,7 @@ while True:
 
     color_frame = frames.get_color_frame()
     depth_frame = frames.get_depth_frame()
+    depth_frame2=depth_frame
     color = np.asanyarray(color_frame.get_data())
     plt.rcParams["axes.grid"] = False
     plt.rcParams['figure.figsize'] = [12, 6]
@@ -106,17 +107,14 @@ while True:
 
     colorizer = rs.colorizer()
     colorized_depth = np.asanyarray(colorizer.colorize(depth_frame).get_data())
+
     colorized_depthColorMap=cv.applyColorMap(cv.convertScaleAbs(colorized_depth, alpha=14), cv.COLORMAP_OCEAN)
-    plt.imshow(colorized_depthColorMap)
-    plt.show()
+    #plt.imshow(colorized_depthColorMap)
+    #plt.show()
 
     # Create alignment primitive with color as its target stream:
     align = rs.align(rs.stream.color)
     frameset = align.process(frames)
-
-    # # Update color and depth frames:
-    # aligned_depth_frame = frameset.get_depth_frame()
-    # colorized_depth = np.asanyarray(colorizer.colorize(aligned_depth_frame).get_data())
 
     # Show the two frames together:
     images = np.hstack((color, colorized_depth))
@@ -124,19 +122,16 @@ while True:
     plt.show()
 #=====
 
-    # Create alignment primitive with color as its target stream:
-    align = rs.align(rs.stream.depth)
-    frameset = align.process(frames)
-    aligned_depth_frame = frameset.get_depth_frame()
+
     color_image = np.asanyarray(color_frame.get_data())
-    # depth_image = np.asanyarray(aligned_depth_frame.get_data())
     depth_image = np.asanyarray(depth_frame.get_data())
+    depth_picture=depth_image
     pipeline.stop()
     qualify_image = color_image
 
     # full_path = path + f
     # qualify_image = cv.imread(full_path)
-
+    qualify_depth = depth_picture.copy()
     qualify_result = qualify_image.copy()
 
     show_process_image('Start qualify',qualify_result)
@@ -171,7 +166,7 @@ while True:
     postprocess(timg, qualify_result, outs, tconfThreshold, tnmsThreshold)
 
 
-    bad_tomato_coordinates = coords(rectangle_of_tomatoes, qualify_result ,qualify_image,depth_image)
+    bad_tomato_coordinates = coords(rectangle_of_tomatoes, qualify_result ,qualify_image,qualify_depth,profile)
 
 
     # print(bad_tomato_coordinates)

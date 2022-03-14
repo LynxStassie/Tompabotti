@@ -166,7 +166,7 @@ while True:
     postprocess(timg, qualify_result, outs, tconfThreshold, tnmsThreshold)
 
 
-    bad_tomato_coordinates = coords(rectangle_of_tomatoes, qualify_result ,qualify_image,qualify_depth,profile)
+    bad_tomato_coordinates = coords(rectangle_of_tomatoes, qualify_result ,qualify_image,qualify_depth,colorized_depth,profile)
 
 
     # print(bad_tomato_coordinates)

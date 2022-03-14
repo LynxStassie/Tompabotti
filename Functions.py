@@ -502,7 +502,7 @@ def pedicel_info_process(tomato_boxes, color_image, result_image):
     return pedicel_tomato_coordinates
 
 
-def coords(tomato_boxes, color_image, result_image, depth_image,profile): #,depth_frame, frameset,aligned_depth_frame):
+def coords(tomato_boxes, color_image, result_image, depth_image,colorized_image,profile): #,depth_frame, frameset,aligned_depth_frame):
     # find center of box from tomato_boxes
     # coordinates x , y - pixel coordinates, box center
     #cv.imshow("title", depth_image)
@@ -520,8 +520,8 @@ def coords(tomato_boxes, color_image, result_image, depth_image,profile): #,dept
             ymin = tomato_box[1]
             xmax = tomato_box[0]+tomato_box[2] # xmin + width
             ymax = tomato_box[1] + tomato_box[3] # ymin + height
-
-
+            xwidth = tomato_box[2]
+            yheight = tomato_box[3]
             (m,n) = (int((xmin+xmax)/2), int((ymin+ymax)/2)) # toouple of coords of center of the box with tomato
             cv.circle(result_image, (m, n), 4, (0, 255, 255), 5)
 
@@ -540,10 +540,20 @@ def coords(tomato_boxes, color_image, result_image, depth_image,profile): #,dept
             depth_sensor = profile.get_device().first_depth_sensor()
             depth_scale = depth_sensor.get_depth_scale()
             title = 'mouse event'
-            cv.imshow(title, color_image)
             depth_colormap = cv.applyColorMap(cv.convertScaleAbs(depth_image, alpha=0.8), cv.COLORMAP_JET)
-
+            cv.circle(colorized_image, (m, n), 4, (255, 255, 255), 5)
+            cv.circle(colorized_image, (xmin, ymin), 4, (0, 0, 255), 5)
+            cv.circle(colorized_image, (xmin, ymax), 4, (255, 0, 0), 5)
+            cv.circle(colorized_image, (xmax, ymin), 4, (0, 255, 0), 5)
+            cv.circle(colorized_image, (xmax, ymax), 4, (0, 255, 0), 5)
+            # cv.imshow(title, color_image)
+            # cv.imshow(title, colorized_image)
+            #plt.figure(figsize=(10, 10))
+            plt.imshow(color_image)
+            plt.imshow(colorized_image, alpha=0.5)
             depth = depth_image[n, m].astype(float)
+            depth = depth_image[xmin, xmax].astype(float)
+
             print(m, n)
             distance = depth * depth_scale
             print("Distance (m): ", distance)

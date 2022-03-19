@@ -1,6 +1,7 @@
 import os
 import cv2 as cv
 import numpy as np
+import keyboard
 from PIL.ImageOps import crop
 from pywinusb import hid
 from time import sleep
@@ -541,24 +542,25 @@ def coords(tomato_boxes, color_image, result_image, depth_image,colorized_image,
             depth_scale = depth_sensor.get_depth_scale()
             title = 'mouse event'
             depth_colormap = cv.applyColorMap(cv.convertScaleAbs(depth_image, alpha=0.8), cv.COLORMAP_JET)
-            cv.circle(colorized_image, (m, n), 4, (255, 255, 255), 5)
-            cv.circle(colorized_image, (xmin, ymin), 4, (0, 0, 255), 5)
-            cv.circle(colorized_image, (xmin, ymax), 4, (255, 0, 0), 5)
-            cv.circle(colorized_image, (xmax, ymin), 4, (0, 255, 0), 5)
-            cv.circle(colorized_image, (xmax, ymax), 4, (0, 255, 0), 5)
+            cv.circle(colorized_image, (m+80, n+-20), 4, (255, 255, 255), 5)
+            cv.circle(colorized_image, (xmin+80, ymin-20), 4, (0, 0, 255), 5)
+            cv.circle(colorized_image, (xmin+80, ymax-20), 4, (255, 0, 0), 5)
+            cv.circle(colorized_image, (xmax+80, ymin-20), 4, (0, 255, 0), 5)
+            cv.circle(colorized_image, (xmax+80, ymax-20), 4, (0, 255, 0), 5)
+            list_of_points = [(m, n),(xmin, ymin),(xmin, ymax),(xmax, ymin),(xmax, ymax)]
+
             # cv.imshow(title, color_image)
             # cv.imshow(title, colorized_image)
             #plt.figure(figsize=(10, 10))
             plt.imshow(color_image)
             plt.imshow(colorized_image, alpha=0.5)
-            depth = depth_image[n, m].astype(float)
-            depth = depth_image[xmin, xmax].astype(float)
+            #a = input()
 
-            print(m, n)
-            distance = depth * depth_scale
-            print("Distance (m): ", distance)
-
-
+            for point in list_of_points:
+                depth = depth_image[point[1], point[0]].astype(float)
+                print("point:",point[1]+50, point[0])
+                distance = depth * depth_scale
+                print("Distance (m): ", distance)
 
             # distance = depth * depth_scale
             print('x:', x_coord)#cut_coordinate[0])

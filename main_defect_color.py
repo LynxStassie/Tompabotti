@@ -91,9 +91,12 @@ while True:
     profile = pipeline.start(config)
     frames = pipeline.wait_for_frames()
 #=====
+# Create alignment primitive with color as its target stream:
+    align = rs.align(rs.stream.color)
+    frameset = align.process(frames)
 
-    color_frame = frames.get_color_frame()
-    depth_frame = frames.get_depth_frame()
+    color_frame = frameset.get_color_frame()
+    depth_frame = frameset.get_depth_frame()
     depth_frame2=depth_frame
     color = np.asanyarray(color_frame.get_data())
     plt.rcParams["axes.grid"] = False
@@ -112,14 +115,13 @@ while True:
     #plt.imshow(colorized_depthColorMap)
     #plt.show()
 
-    # Create alignment primitive with color as its target stream:
-    align = rs.align(rs.stream.color)
-    frameset = align.process(frames)
+
+
 
     # Show the two frames together:
     images = np.hstack((color, colorized_depth))
-    plt.imshow(images)
-    plt.show()
+    #plt.imshow(images)
+    #plt.show()
 #=====
 
 

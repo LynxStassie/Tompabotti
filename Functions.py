@@ -542,11 +542,11 @@ def coords(tomato_boxes, color_image, result_image, depth_image,colorized_image,
             depth_scale = depth_sensor.get_depth_scale()
             title = 'mouse event'
             depth_colormap = cv.applyColorMap(cv.convertScaleAbs(depth_image, alpha=0.8), cv.COLORMAP_JET)
-            cv.circle(colorized_image, (m+80, n+-20), 4, (255, 255, 255), 5)
-            cv.circle(colorized_image, (xmin+80, ymin-20), 4, (0, 0, 255), 5)
-            cv.circle(colorized_image, (xmin+80, ymax-20), 4, (255, 0, 0), 5)
-            cv.circle(colorized_image, (xmax+80, ymin-20), 4, (0, 255, 0), 5)
-            cv.circle(colorized_image, (xmax+80, ymax-20), 4, (0, 255, 0), 5)
+            cv.circle(colorized_image, (m, n), 4, (255, 255, 255), 5)
+            cv.circle(colorized_image, (xmin, ymin), 4, (0, 0, 255), 5)
+            cv.circle(colorized_image, (xmin, ymax), 4, (255, 0, 0), 5)
+            cv.circle(colorized_image, (xmax, ymin), 4, (0, 255, 0), 5)
+            cv.circle(colorized_image, (xmax, ymax), 4, (0, 255, 0), 5)
             list_of_points = [(m, n),(xmin, ymin),(xmin, ymax),(xmax, ymin),(xmax, ymax)]
 
             # cv.imshow(title, color_image)
@@ -555,12 +555,14 @@ def coords(tomato_boxes, color_image, result_image, depth_image,colorized_image,
             plt.imshow(color_image)
             plt.imshow(colorized_image, alpha=0.5)
             #a = input()
-
-            for point in list_of_points:
-                depth = depth_image[point[1], point[0]].astype(float)
-                print("point:",point[1]+50, point[0])
-                distance = depth * depth_scale
-                print("Distance (m): ", distance)
+            depth = depth_image[n, m].astype(float)
+            print("point:", n, m)
+            distance = depth * depth_scale
+            # for point in list_of_points:
+            #     depth = depth_image[point[1], point[0]].astype(float)
+            #     print("point:",point[1], point[0])
+            #     distance = depth * depth_scale
+            #     print("Distance (m): ", distance)
 
             # distance = depth * depth_scale
             print('x:', x_coord)#cut_coordinate[0])
@@ -574,7 +576,7 @@ def coords(tomato_boxes, color_image, result_image, depth_image,colorized_image,
             cv.putText(result_image, y_label, (i - 30, j), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             cv.putText(result_image, z_label, (i - 30, j + 20), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             plt.imshow(result_image)
-            #plt.show()
+            plt.show()
   #  (i - 30, j + 20)
     return pedicel_tomato_coordinates
 

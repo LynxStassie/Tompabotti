@@ -91,10 +91,21 @@ while True:
     profile = pipeline.start(config)
     frames = pipeline.wait_for_frames()
 #=====
-# Create alignment primitive with color as its target stream:
+    # Create alignment primitive with color as its target stream:
+    # see https://github.com/ut-robotics/picr21-team-4meats/blob/0a2f68959e92fb180e8dc32ea1351e628a1b4e30/camera.py#L73
+    #
     align = rs.align(rs.stream.color)
     frameset = align.process(frames)
+## filter options
+    color_sensor = profile.get_device().query_sensors()[1]
+    color_sensor.set_option(rs.option.enable_auto_white_balance, True)
+    color_sensor.set_option(rs.option.exposure,1000)
+    color_sensor.set_option(rs.option.enable_auto_exposure,True)
+    #color_sensor.set_option(rs.option.hdr_enabled, 1)
 
+    depth_sensor = profile.get_device().query_sensors()[0]
+    depth_sensor.set_option(rs.option.hdr_enabled, 1)
+## ====
     color_frame = frameset.get_color_frame()
     depth_frame = frameset.get_depth_frame()
     depth_frame2=depth_frame
@@ -114,10 +125,6 @@ while True:
     colorized_depthColorMap=cv.applyColorMap(cv.convertScaleAbs(colorized_depth, alpha=14), cv.COLORMAP_OCEAN)
     #plt.imshow(colorized_depthColorMap)
     #plt.show()
-
-
-
-
     # Show the two frames together:
     images = np.hstack((color, colorized_depth))
     #plt.imshow(images)
@@ -202,27 +209,27 @@ while True:
 
     # Read weight value
     #weight = weight()
-    weight = 400
-    print('weight:',weight)
+    #weight = 400
+    #print('weight:',weight)
 
     # Weight evaluate
-    number_cut = weight_evaluate(weight, len(tomato_boxes))
-    print('Cut',number_cut,'tomato(es)')
+    #number_cut = weight_evaluate(weight, len(tomato_boxes))
+    #print('Cut',number_cut,'tomato(es)')
 
     # Determine the tomatoes needed to cut
-    overweight_tomatoes = determine_overweight(tomato_boxes, number_cut)
+    #overweight_tomatoes = determine_overweight(tomato_boxes, number_cut)
     # Draw red bb to these tomato
-    draw_overweight(weight_result,tomato_boxes,overweight_tomatoes)
-    show_process_image('Weight result',weight_result)
+    #draw_overweight(weight_result,tomato_boxes,overweight_tomatoes)
+    #show_process_image('Weight result',weight_result)
 
     # Detect the pedicels
-    overweight_tomato_coordinates = pedicel_info_process(overweight_tomatoes, weight_image, weight_result)
+    #overweight_tomato_coordinates = pedicel_info_process(overweight_tomatoes, weight_image, weight_result)
 
     # Show weight result
-    print(overweight_tomato_coordinates)
-    show_process_image('Weight result', weight_result)
-    plt.imshow(weight_result)
-    plt.show()
+    #print(overweight_tomato_coordinates)
+    #show_process_image('Weight result', weight_result)
+    #lt.imshow(weight_result)
+    #plt.show()
     # Send coordinates
     #send_overweight_cutting_info(overweight_tomato_coordinates)
 

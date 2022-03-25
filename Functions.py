@@ -13,7 +13,9 @@ from math import sqrt
 from PIL import Image
 from itertools import count
 import matplotlib.pyplot as plt
+import time
 
+from pyrealsense2.pyrealsense2 import option
 
 image_name_counter = 0
 
@@ -56,6 +58,44 @@ pipeline = rs.pipeline()
 config = rs.config()
 config.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
 config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
+
+def set_short_range(depth_sensor):
+#    depth_sensor.set_option(option.alternate_ir, 0.0)
+    # depth_sensor.set_option(option.apd_temperature, -9999)
+    # depth_sensor.set_option(option.depth_offset, 4.5)
+    # depth_sensor.set_option(option.depth_units, 0.000250000011874363)
+#    depth_sensor.set_option(option.digital_gain, 2.0)
+    depth_sensor.set_option(option.enable_ir_reflectivity, 0.0)
+    depth_sensor.set_option(option.enable_max_usable_range, 0.0)
+    depth_sensor.set_option(option.error_polling_enabled, 1.0)
+    depth_sensor.set_option(option.frames_queue_size, 16.0)
+    depth_sensor.set_option(option.freefall_detection_enabled, 1.0)
+    depth_sensor.set_option(option.global_time_enabled, 0.0)
+    depth_sensor.set_option(option.host_performance, 0.0)
+    # depth_sensor.set_option(option.humidity_temperature, 36.6105880737305)
+    depth_sensor.set_option(option.inter_cam_sync_mode, 0.0)
+    depth_sensor.set_option(option.invalidation_bypass, 0.0)
+    # depth_sensor.set_option(option.ldd_temperature, 36.6820793151855)
+    depth_sensor.set_option(option.laser_power, 71)
+    # depth_sensor.set_option(option.ma_temperature, 36.6820793151855)
+    # depth_sensor.set_option(option.mc_temperature, 36.570125579834)
+    depth_sensor.set_option(option.min_distance, 190)
+    # depth_sensor.set_option(option.noise_estimation, 0.0)
+    depth_sensor.set_option(option.noise_filtering, 4.0)
+    depth_sensor.set_option(option.post_processing_sharpening, 1)
+    depth_sensor.set_option(option.pre_processing_sharpening, 0.0)
+    depth_sensor.set_option(option.receiver_gain, 18)
+    depth_sensor.set_option(option.reset_camera_accuracy_health, 0.0)
+    depth_sensor.set_option(option.sensor_mode, 0.0)
+    depth_sensor.set_option(option.trigger_camera_accuracy_health, 0.0)
+    depth_sensor.set_option(option.visual_preset, 5)
+    depth_sensor.set_option(option.zero_order_enabled, 0.0)
+
+    depth_sensor.set_option(option.confidence_threshold, 1.0)
+
+    time.sleep(10)
+
+    return depth_sensor
 
 def getframe():
     pipeline.start(config)
@@ -181,14 +221,14 @@ def show_process_image(window_name, image):
     cv.destroyAllWindows()
     cv.imshow(window_name,image)
     im = Image.fromarray(image)
-    global image_name_counter
-    image_name_counter = image_name_counter + 1
+    # global image_name_counter
+    # image_name_counter = image_name_counter + 1
     # target dir - dirpath that in dirname
     # C:\Users\123456\Tompabotti\Tomato_project\Results_photo
-    dirpath=os.path.join(os.path.dirname(__file__))
-    dirname='Results_photo'
-    filename='tomato.jpeg'
-    im.save(os.path.join(os.path.join(dirpath, dirname ).replace('Program\\',''), str(image_name_counter) + filename ))
+    # dirpath=os.path.join(os.path.dirname(__file__))
+    # dirname='Results_photo'
+    # filename='tomato.jpeg'
+    # im.save(os.path.join(os.path.join(dirpath, dirname ).replace('Program\\',''), str(image_name_counter) + filename ))
     cv.waitKey(1)
 
 #####################################WEIGHT#####################################
@@ -503,7 +543,7 @@ def pedicel_info_process(tomato_boxes, color_image, result_image):
     return pedicel_tomato_coordinates
 
 
-def coords(tomato_boxes, color_image, result_image, depth_image,colorized_image,profile): #,depth_frame, frameset,aligned_depth_frame):
+def coords(tomato_boxes, color_image, result_image, depth_image,colorized_image,profile):
     # find center of box from tomato_boxes
     # coordinates x , y - pixel coordinates, box center
     #cv.imshow("title", depth_image)
@@ -511,12 +551,8 @@ def coords(tomato_boxes, color_image, result_image, depth_image,colorized_image,
         pedicel_tomato_coordinates = None
 
     else:
-        common_depth = 50 #mm
-        pedicel_tomato_coordinates = []
-
         for tomato_box in tomato_boxes:
             # Crop the images to detect pedicel in the crop
-
             xmin = tomato_box[0]
             ymin = tomato_box[1]
             xmax = tomato_box[0]+tomato_box[2] # xmin + width
@@ -528,8 +564,6 @@ def coords(tomato_boxes, color_image, result_image, depth_image,colorized_image,
 
             (i, j) = (m,n)#pedicel_coor_convert(tomato_box, pedicel[0], pedicel[2])
             print('coordinate detected')
-
-
             # Print out coordinates
             x_coord = (m,n)[0]
             y_coord = (m,n)[1]
@@ -543,28 +577,21 @@ def coords(tomato_boxes, color_image, result_image, depth_image,colorized_image,
             title = 'mouse event'
             depth_colormap = cv.applyColorMap(cv.convertScaleAbs(depth_image, alpha=0.8), cv.COLORMAP_JET)
             cv.circle(colorized_image, (m, n), 4, (255, 255, 255), 5)
-            cv.circle(colorized_image, (xmin, ymin), 4, (0, 0, 255), 5)
-            cv.circle(colorized_image, (xmin, ymax), 4, (255, 0, 0), 5)
-            cv.circle(colorized_image, (xmax, ymin), 4, (0, 255, 0), 5)
-            cv.circle(colorized_image, (xmax, ymax), 4, (0, 255, 0), 5)
-            list_of_points = [(m, n),(xmin, ymin),(xmin, ymax),(xmax, ymin),(xmax, ymax)]
-
+            # cv.circle(colorized_image, (xmin, ymin), 4, (0, 0, 255), 5)
+            # cv.circle(colorized_image, (xmin, ymax), 4, (255, 0, 0), 5)
+            # cv.circle(colorized_image, (xmax, ymin), 4, (0, 255, 0), 5)
+            # cv.circle(colorized_image, (xmax, ymax), 4, (0, 255, 0), 5)
+            # list_of_points = [(m, n),(xmin, ymin),(xmin, ymax),(xmax, ymin),(xmax, ymax)]
             # cv.imshow(title, color_image)
             # cv.imshow(title, colorized_image)
-            #plt.figure(figsize=(10, 10))
+            # plt.figure(figsize=(10, 10))
             plt.imshow(color_image)
-            plt.imshow(colorized_image, alpha=0.5)
-            #a = input()
+            plt.imshow(colorized_image, alpha=0.6)
+            plt.show()
+            show_process_image("1",colorized_image)
             depth = depth_image[n, m].astype(float)
             print("point:", n, m)
             distance = depth * depth_scale
-            # for point in list_of_points:
-            #     depth = depth_image[point[1], point[0]].astype(float)
-            #     print("point:",point[1], point[0])
-            #     distance = depth * depth_scale
-            #     print("Distance (m): ", distance)
-
-            # distance = depth * depth_scale
             print('x:', x_coord)#cut_coordinate[0])
             print('y:', y_coord)#cut_coordinate[1])
             print('z:', distance)
@@ -577,66 +604,7 @@ def coords(tomato_boxes, color_image, result_image, depth_image,colorized_image,
             cv.putText(result_image, z_label, (i - 30, j + 20), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             plt.imshow(result_image)
             plt.show()
-  #  (i - 30, j + 20)
-    return pedicel_tomato_coordinates
-
-
-# def getDist2(m,n,depth_img,color_img):
-    # frame_width = 1280
-    # frame_heigth = 720
-    # pipeline2=rs.pipeline()
-    # config.enable_stream(rs.stream.depth, frame_width, frame_heigth, rs.format.z16, 30)
-    # config.enable_stream(rs.stream.color, frame_width, frame_heigth, rs.format.bgr8, 30)
-    #
-    # profile = pipeline2.start(config)
-    # # Getting the depth sensor's depth scale (see rs-align example for explanation)
-    # # depth_sensor = profile.get_device().first_depth_sensor()
-    # # depth_scale = depth_sensor.get_depth_scale()
-    # # print("Depth Scale is: " , depth_scale)
-    #
-    # depth_sensor = profile.get_device().first_depth_sensor()
-    # auto_expl = depth_sensor.get_option(rs.option.enable_auto_exposure)
-    # print("ae=",auto_expl)
-    # auto_expl = 2.0
-    # laser_pwr = depth_sensor.get_option(rs.option.laser_power)
-    # print("laser power = ", laser_pwr)
-    # # print(depth_sensor.get_option_range(rs.option.min_distance))
-    # # print("laser power range = " , laser_range.min , "~", laser_range.max)
-    # set_laser = 8
-    # # depth_sensor.set_option(rs.option.min_distance, 0.25)
-    # depth_scale = depth_sensor.get_depth_scale()
-    # print(depth_sensor.get_depth_scale())
-    # title = 'mouse event'
-    #
-    #
-    # # Wait for a coherent pair of frames: depth and color
-    # frames = pipeline2.wait_for_frames()
-    # depth_frame = frames.get_depth_frame()
-    # color_frame = frames.get_color_frame()
-    #
-    #
-    # # Convert images to numpy arrays
-    # depth_image = np.asanyarray(depth_frame.get_data())
-    # color_image = np.asanyarray(color_frame.get_data())
-    # # depth_image_3d = np.dstack((depth_image,depth_image,depth_image))
-    # # print(np.shape(depth_image))
-    # # print(np.shape(color_image))
-    # depth_colormap = cv.applyColorMap(cv.convertScaleAbs(depth_image, alpha=4), cv.COLORMAP_JET)
-    # # depth_colormap_3d = np.dstack((depth_colormap,depth_colormap,depth_colormap))
-    # # depth_colormap = cv2.cvtColor(np.float32(depth_colormap))
-    # # cv2.imshow(title, color_frame)
-    # # cv2.imshow(title,color_image)
-    # cv.circle(color_img, (m, n), 4, (255, 255, 255), 5)
-    # cv.circle(depth_img, (m, n), 4, (255, 255, 255), 5)
-    # cv.imshow("title", color_img)
-    #
-    # cv.imshow("title", depth_img)
-    #
-    #
-    # depth = depth_img[m, n].astype(float)
-    # return depth
-
-
+    return []
 
 def getDist(xmin, ymin,xmax, ymax):
     # Setup:
@@ -700,170 +668,6 @@ def getDist(xmin, ymin,xmax, ymax):
     print("Detected a {0} {1:.3} meters away. and xmin={2} xmin_depth={3} xmax={4} xmin={5} xmax_depth={6}".format("className", dist, xmin,xmin_depth,xmax,xmax_depth,1))
 
     return float(dist)
-
-def coords2(tomato_boxes, color_image, result_image, profile, outs, aligned_depth_frame, frameset): #,depth_frame, frameset,aligned_depth_frame):
-    # Setup:
-    pipe = rs.pipeline()
-    cfg = rs.config()
-    cfg.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
-    cfg.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
-    profile = pipe.start(cfg)
-
-    # Skip 5 first frames to give the Auto-Exposure time to adjust
-    for x in range(5):
-        pipe.wait_for_frames()
-
-    # Store next frameset for later processing:
-    frameset = pipe.wait_for_frames()
-    color_frame = frameset.get_color_frame()
-    depth_frame = frameset.get_depth_frame()
-
-    # Cleanup:
-    pipe.stop()
-    print("Frames Captured")
-
-    color = np.asanyarray(color_frame.get_data())
-    plt.rcParams["axes.grid"] = False
-    plt.rcParams['figure.figsize'] = [12, 6]
-    plt.imshow(color)
-    # plt.show()
-    colorizer = rs.colorizer()
-    colorized_depth = np.asanyarray(colorizer.colorize(depth_frame).get_data())
-    plt.imshow(colorized_depth)
-    # plt.show()
-
-    # Create alignment primitive with color as its target stream:
-    align = rs.align(rs.stream.color)
-    frameset = align.process(frameset)
-
-    # Update color and depth frames:
-    aligned_depth_frame = frameset.get_depth_frame()
-    colorized_depth = np.asanyarray(colorizer.colorize(aligned_depth_frame).get_data())
-
-    # Show the two frames together:
-    images = np.hstack((color, colorized_depth))
-    plt.imshow(images)
-    # plt.show()
-
-    # Standard OpenCV boilerplate for running the net:
-    height, width = color.shape[:2]
-    expected = 300
-    aspect = width / height
-    resized_image = cv.resize(color, (round(expected * aspect), expected))
-    crop_start = round(expected * (aspect - 1) / 2)
-    crop_img = resized_image[0:expected, crop_start:crop_start + expected]
-
-
-
-
-    if tomato_boxes == None:
-        pedicel_tomato_coordinates = None
-
-    else:
-        common_depth = 50 #mm
-        pedicel_tomato_coordinates = []
-
-        for tomato_box in tomato_boxes:
-            # Crop the images to detect pedicel in the crop
-            crop_img = color_image[tomato_box[1]:tomato_box[1] + tomato_box[2],
-                           tomato_box[0]:tomato_box[0] + tomato_box[3]]
-
-            #Center of the tomato bounding box
-            (m,n) = (int(tomato_box[0]+tomato_box[2]/2), int(tomato_box[1]+tomato_box[3]/2))
-            cv.circle(result_image, (m, n), 4, (0, 255, 255), 5)
-
-            # label = detections[0, 0, 0, 1]
-            # conf = detections[0, 0, 0, 2]
-            xmin = tomato_box[0]
-            ymin = tomato_box[1]
-            xmax = tomato_box[2]
-            ymax = tomato_box[3]
-
-            # className = classNames[int(label)]
-            #print(crop_img)
-            cv.rectangle(crop_img, (int(xmin * expected), int(ymin * expected)),
-                         (int(xmax * expected), int(ymax * expected)), (255, 255, 255), 2)
-            cv.putText(crop_img, "surprise!",
-                       (int(xmin * expected), int(ymin * expected) - 5),
-                       cv.FONT_HERSHEY_COMPLEX, 0.5, (255, 255, 255))
-
-            show_process_image('Start qualify', crop_img)
-            plt.imshow(crop_img)
-            plt.show()
-            scale = height / expected /1000
-            xmin_depth = int((xmin * expected + crop_start) * scale)
-            ymin_depth = int((ymin * expected) * scale)
-            xmax_depth = int((xmax * expected + crop_start) * scale)
-            ymax_depth = int((ymax * expected) * scale)
-            xmin_depth, ymin_depth, xmax_depth, ymax_depth
-            cv.rectangle(colorized_depth, (xmin_depth, ymin_depth),
-                         (xmax_depth, ymax_depth), (255, 255, 255), 2)
-            plt.imshow(colorized_depth)
-            # plt.show()
-
-            depth = np.asanyarray(aligned_depth_frame.get_data())
-            # Crop depth data:
-            depth = depth[xmin_depth:xmax_depth, ymin_depth:ymax_depth].astype(float)
-
-            # Get data scale from the device and convert to meters
-            depth_scale = profile.get_device().first_depth_sensor().get_depth_scale()
-            depth = depth * depth_scale
-            dist, _, _, _ = cv.mean(depth)
-
-            print(
-                "Detected a {0} {1:.3} meters away. and xmin={2} xmin_depth={3} xmax={4} xmin={5} xmax_depth={6}".format(
-                    "surprise!", dist, xmin, xmin_depth, xmax, xmax_depth, 1))
-
-            # pedicel = [pedicel_box, confidence, angle_detected]
-            pedicel = pedicel_detect(crop_img)
-            if pedicel == None:
-                print('cannot find pedicel')
-                pass
-            else:
-                (i, j) = pedicel_coor_convert(tomato_box, pedicel[0], pedicel[2])
-                print('pedicel detected')
-                cv.circle(result_image, (i, j), 4, (0, 0, 255), 5)
-
-                # Find coordinate of the point
-                depth_avg = 0
-                detect_depth_time = 0
-                depth_list = []
-                while True:
-                    depth = get_distance((i,j))
-                    # depth = 277
-                    depth = 1
-                    print('depth:', depth)
-                    if depth != 0:
-                        depth_list.append(depth)
-                    detect_depth_time += 1
-
-                    if len(depth_list) >= 5 or detect_depth_time >=10:
-                        break
-
-                try:
-                    depth_avg = median(depth_list)
-                except:
-                    depth_avg = common_depth
-
-                # depth_avg = common_depth #Use default depth
-
-                cut_coordinate = xyz_converter(i,j,depth_avg)
-                tomato_coordinate = xyz_converter(m,n,depth_avg+10)
-
-                try:
-                    pedicel_tomato_coordinates.append([cut_coordinate,tomato_coordinate])
-                except:
-                    print('coordinate error')
-                    break
-
-
-
-
-    try:
-        pedicel_tomato_coordinates.append([cut_coordinate,tomato_coordinate])
-    except:
-        print('coordinate error')
-    return pedicel_tomato_coordinates
 
 #####################################COMMUNICATE#####################################
 def send_bad_tomato_amount(a):

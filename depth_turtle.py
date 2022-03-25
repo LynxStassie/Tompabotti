@@ -8,7 +8,7 @@ import cv2
 pipeline = rs.pipeline()
 config = rs.config()
 
-config.enable_device_from_file("../realsense_d455.bag")
+#config.enable_device_from_file("../realsense_d455.bag")
 config.enable_stream(rs.stream.depth, 848, 480, rs.format.z16, 30)
 config.enable_stream(rs.stream.color, 848, 480, rs.format.bgr8, 30)
 
@@ -24,10 +24,10 @@ print("ae=",auto_expl)
 auto_expl = 2.0
 laser_pwr = depth_sensor.get_option(rs.option.laser_power)
 print("laser power = ", laser_pwr)
-# print(depth_sensor.get_option_range(rs.option.min_distance))
-# print("laser power range = " , laser_range.min , "~", laser_range.max)
+#print(depth_sensor.get_option_range(rs.option.min_distance))
+#print("laser power range = " , laser_range.min , "~", laser_range.max)
 set_laser = 8
-# depth_sensor.set_option(rs.option.min_distance, 0.25)
+#depth_sensor.set_option(rs.option.min_distance, 0.25)
 depth_scale = depth_sensor.get_depth_scale()
 print(depth_sensor.get_depth_scale())
 title = 'mouse event'
@@ -48,7 +48,7 @@ try:
         # depth_image_3d = np.dstack((depth_image,depth_image,depth_image))
         # print(np.shape(depth_image))
         # print(np.shape(color_image))
-        depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.8), cv2.COLORMAP_JET)
+        depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=1), cv2.COLORMAP_JET)
         # depth_colormap_3d = np.dstack((depth_colormap,depth_colormap,depth_colormap))
         # depth_colormap = cv2.cvtColor(np.float32(depth_colormap))
                 # cv2.imshow(title, color_frame)
@@ -64,7 +64,7 @@ try:
                 print ("Distance (m): ", distance)
 
         cv2.setMouseCallback(title,onMouse)
-        cv2.imshow(title, depth_colormap)
+        cv2.imshow(title, depth_image)
         key  = cv2.waitKey(10)
         if key == 27:
             cv2.imwrite('../color_sensor.jpg',color_image)

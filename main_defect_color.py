@@ -94,38 +94,56 @@ while True:
     # see https://github.com/ut-robotics/picr21-team-4meats/blob/0a2f68959e92fb180e8dc32ea1351e628a1b4e30/camera.py#L73
     #
     exp = 71
+    print("exposure value exp=",exp)
+    # initialize camera objects
     profile = pipeline.start(config)
+    frames = pipeline.wait_for_frames()
+    align = rs.align(rs.stream.color)
+    frameset = align.process(frames)
+    color_sensor = profile.get_device().query_sensors()[1]
+    # color sensor - turn on auto_ exposure and whBalance
+    color_sensor.set_option(rs.option.enable_auto_white_balance, True)
+    color_sensor.set_option(rs.option.enable_auto_exposure, True)
+    # prepare vars to output initial values
+
+
+    # set delta for exposure increment
+    exposure_delta = 100
     while (1):
-        print("exposure=",exp)
-        frames = pipeline.wait_for_frames()
-        align = rs.align(rs.stream.color)
-        frameset = align.process(frames)
         ## filter options
-        color_sensor = profile.get_device().query_sensors()[1]
-        color_sensor.set_option(rs.option.enable_auto_white_balance, True)
         # color_sensor.set_option(rs.option.exposure, 10.0)
         # color_sensor.set_option(rs.option.enable_auto_exposure,True)
         # color_sensor.set_option(rs.option.hdr_enabled, 1)
 
         depth_sensor = profile.get_device().query_sensors()[0]
-
-        exposure = depth_sensor.set_option(rs.option.exposure, exp)
-        exposure = depth_sensor.set_option(rs.option.exposure, exp)
+        exp = depth_sensor.get_option(rs.option.exposure)
+        gain = depth_sensor.get_option(rs.option.gain)
+        print("initial: exposure=", "gain=",gain)
+        # exposure = depth_sensor.set_option(rs.option.exposure, exp)
+        # exposure = depth_sensor.set_option(rs.option.exposure, exp)
 
         exposure_min, exposure_max = depth_sensor.get_option_range(rs.option.exposure).min, ...
         depth_sensor.get_option_range(rs.option.exposure).max
         exposure_limit = depth_sensor.get_option_range(rs.option.auto_exposure_limit)
-        print(exposure_limit, exposure_max, exposure_min, exposure)
+        print(exposure_limit, exposure_max, exposure_min,exposure_delta)
 
+        # sensor.set_option(rs.option.exposure, 1.0)
+        #sensor.set_option(rs.option.gain, 8.0)
+
+        #time.sleep(1)
+
+        #exp = sensor.get_option(rs.option.exposure)  # Get exposure
+        #auto_exp = sensor.get_option(rs.option.enable_auto_exposure)
+       # print(exp, auto_exp)
         # explosure = 50.0q
-        print("exposure=", exp, exposure_min, exposure_max)
+        #print("exposure=", exp, exposure_min, exposure_max)
         # set_short_range(depth_sensor)
         # auto_expl = depth_sensor.get_option(rs.option.enable_auto_exposure)
         # print("auto_exposure=",auto_expl)
         # auto_expl = 2.0
         # print("auto_exposure=",auto_expl)
         # exp=1
-        exposure = exp
+       # exposure = exp
         color_frame = frameset.get_color_frame()
         depth_frame = frameset.get_depth_frame()
         depth_frame2=depth_frame
@@ -144,21 +162,21 @@ while True:
         #plt.imshow(colorized_depthColorMap)
         #plt.show()
         # Show the two frames together:
-        images = np.hstack((color, colorized_depth))
+        #images = np.hstack((color, colorized_depth))
         #plt.imshow(images)
         #plt.show()
-        exp = exp + 10
-
-        exposure = depth_sensor.set_option(rs.option.exposure, exp)
-        exposure = depth_sensor.set_option(rs.option.exposure, exp)
-        color_image = np.asanyarray(color_frame.get_data())
+        exp = exp + exposure_delta
+        print("exposure=",exp)
+        #exposure = depth_sensor.set_option(rs.option.exposure, exp)
+        #exposure = depth_sensor.set_option(rs.option.exposure, exp)
         depth_image = np.asanyarray(depth_frame.get_data())
-        depth_picture=depth_image
 
-        qualify_image = color_image
         plt.imshow(colorized_depth)#, alpha=0.6)
         plt.show()
-        break
+        # break
+    color_image = np.asanyarray(color_frame.get_data())
+    qualify_image = color_image
+    depth_picture=depth_image
     pipeline.stop()
 
 

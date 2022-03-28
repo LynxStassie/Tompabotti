@@ -132,7 +132,7 @@ while True:
 
         #time.sleep(1)
 
-        #exp = sensor.get_option(rs.option.exposure)  # Get exposure
+        exposure_value = depth_sensor.get_option(rs.option.exposure)  # Get exposure
         #auto_exp = sensor.get_option(rs.option.enable_auto_exposure)
        # print(exp, auto_exp)
         # explosure = 50.0q
@@ -165,13 +165,15 @@ while True:
         #images = np.hstack((color, colorized_depth))
         #plt.imshow(images)
         #plt.show()
-        exp = exp + exposure_delta
-        print("exposure=",exp)
+        # exp = exp + exposure_delta
+        # print("exposure=",exp)
         #exposure = depth_sensor.set_option(rs.option.exposure, exp)
         #exposure = depth_sensor.set_option(rs.option.exposure, exp)
         depth_image = np.asanyarray(depth_frame.get_data())
+        cv.putText(color, str("exposure="+str(exposure_value)), (50 - 30, 50 - 20), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 100), 2)
 
-        plt.imshow(colorized_depth)#, alpha=0.6)
+        plt.imshow(color)#, alpha=0.6)
+        plt.imshow(colorized_depth, alpha=0.6)
         plt.show()
         # break
     color_image = np.asanyarray(color_frame.get_data())

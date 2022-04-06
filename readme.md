@@ -1,9 +1,15 @@
 # Python Project Tomato
 
+
+
 ## Intro
 
 * This project based on dcnn that find tomatoes from camera intel realsence d455.
 * Using pyrealsence, numpy and matplotlib.
+
+### TODO:
+
+check of green boxes side ratio h/w  
 
 ## Basic classes
 

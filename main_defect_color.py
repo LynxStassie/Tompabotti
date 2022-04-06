@@ -93,7 +93,9 @@ while True:
     # Create alignment primitive with color as its target stream:
     # see https://github.com/ut-robotics/picr21-team-4meats/blob/0a2f68959e92fb180e8dc32ea1351e628a1b4e30/camera.py#L73
     #
-    exp = 71
+    exp = 71.0
+    gain = 8
+    exposure_delta = 100
     print("exposure value exp=",exp)
     # initialize camera objects
     profile = pipeline.start(config)
@@ -104,35 +106,38 @@ while True:
     # color sensor - turn on auto_ exposure and whBalance
     color_sensor.set_option(rs.option.enable_auto_white_balance, True)
     color_sensor.set_option(rs.option.enable_auto_exposure, True)
+
     # prepare vars to output initial values
 
 
     # set delta for exposure increment
-    exposure_delta = 100
     while (1):
         ## filter options
         # color_sensor.set_option(rs.option.exposure, 10.0)
         # color_sensor.set_option(rs.option.enable_auto_exposure,True)
         # color_sensor.set_option(rs.option.hdr_enabled, 1)
-
         depth_sensor = profile.get_device().query_sensors()[0]
-        exp = depth_sensor.get_option(rs.option.exposure)
-        gain = depth_sensor.get_option(rs.option.gain)
-        print("initial: exposure=", "gain=",gain)
-        # exposure = depth_sensor.set_option(rs.option.exposure, exp)
-        # exposure = depth_sensor.set_option(rs.option.exposure, exp)
+        depth_sensor.set_option(rs.option.enable_auto_exposure, True)
+        #exp = depth_sensor.get_option(rs.option.exposure)
+        #gain = depth_sensor.get_option(rs.option.gain)
+        #print("initial: exposure=",exp, "gain=", gain)
+        #man_exposure = depth_sensor.set_option(rs.option.exposure, exp)
+        # man_exposure = depth_sensor.set_option(rs.option.exposure, exp)
+        #man_gain = depth_sensor.set_option(rs.option.exposure, 8.0)
+        #print("man_gain=",man_gain,"man_exp=",man_exposure)
 
-        exposure_min, exposure_max = depth_sensor.get_option_range(rs.option.exposure).min, ...
-        depth_sensor.get_option_range(rs.option.exposure).max
-        exposure_limit = depth_sensor.get_option_range(rs.option.auto_exposure_limit)
-        print(exposure_limit, exposure_max, exposure_min,exposure_delta)
-
+        # exposure_min, exposure_max = depth_sensor.get_option_range(rs.option.exposure).min, ...
+        # depth_sensor.get_option_range(rs.option.exposure).max
+        # exposure_limit = depth_sensor.get_option_range(rs.option.auto_exposure_limit)
+        # print(exposure_limit, exposure_max, exposure_min,exposure_delta)
         # sensor.set_option(rs.option.exposure, 1.0)
         #sensor.set_option(rs.option.gain, 8.0)
 
-        #time.sleep(1)
+        time.sleep(1)
 
         exposure_value = depth_sensor.get_option(rs.option.exposure)  # Get exposure
+        gain_value = depth_sensor.get_option(rs.option.gain)  # Get exposure
+        print(exposure_value,gain_value)
         #auto_exp = sensor.get_option(rs.option.enable_auto_exposure)
        # print(exp, auto_exp)
         # explosure = 50.0q
@@ -148,8 +153,8 @@ while True:
         depth_frame = frameset.get_depth_frame()
         depth_frame2=depth_frame
         color = np.asanyarray(color_frame.get_data())
-        plt.rcParams["axes.grid"] = False
-        plt.rcParams['figure.figsize'] = [12, 6]
+        #plt.rcParams["axes.grid"] = False
+        #plt.rcParams['figure.figsize'] = [12, 6]
         #plt.imshow(color)
         #plt.show()
 
@@ -170,10 +175,11 @@ while True:
         #exposure = depth_sensor.set_option(rs.option.exposure, exp)
         #exposure = depth_sensor.set_option(rs.option.exposure, exp)
         depth_image = np.asanyarray(depth_frame.get_data())
-        cv.putText(color, str("exposure="+str(exposure_value)), (50 - 30, 50 - 20), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 100), 2)
+        cv.putText(colorized_depth, str("exposure="+str(exposure_value)), (50 - 30, 50 - 20), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 100), 2)
+        cv.putText(colorized_depth, str("gain="+str(gain_value)), (50 - 30, 100 - 20), cv.FONT_HERSHEY_SIMPLEX, 1, (100, 255, 100), 2)
 
         plt.imshow(color)#, alpha=0.6)
-        plt.imshow(colorized_depth, alpha=0.6)
+        plt.imshow(colorized_depth, alpha=0.9)
         plt.show()
         # break
     color_image = np.asanyarray(color_frame.get_data())

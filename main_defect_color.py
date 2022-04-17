@@ -81,52 +81,86 @@ files = os.listdir(path)
 # Start the main loop for the whole system
 # for f in files:
 while True:
-######################################Qualify Staion################################################################
-    # Waiting for robot's signal
-    # while True:
-    #     if receive_data_to_qualify():
-    #         break
-    #     else:
-    #         continue
-
-#=====
-    # Create alignment primitive with color as its target stream:
-    # see https://github.com/ut-robotics/picr21-team-4meats/blob/0a2f68959e92fb180e8dc32ea1351e628a1b4e30/camera.py#L73
-    #
-    exp = 71.0
-    gain = 8
-    exposure_delta = 100
-    print("exposure value exp=",exp)
     # initialize camera objects
     profile = pipeline.start(config)
     frames = pipeline.wait_for_frames()
-    align = rs.align(rs.stream.color)
-    frameset = align.process(frames)
+    # advanced mode
+    path_to_settings_file='../default.json'
+    with open(path_to_settings_file, 'r') as file:
+        json_text = file.read().strip()
+    device = rs.context().devices[0]
+    print(device)
+    advanced_mode = rs.rs400_advanced_mode(device)
+    advanced_mode.load_json(json_text)
+    print("advanced_mode.is_enabled=",advanced_mode.is_enabled())
+    print(advanced_mode)
+    # print('ae_control:',advanced_mode.get_ae_control())
+    # color sensor
     color_sensor = profile.get_device().query_sensors()[1]
+    color_sensor.set_option(rs.option.enable_auto_exposure, 1)
+    color_sensor.set_option(rs.option.enable_auto_exposure, 1)
+    #color_sensor = profile.get_device().first_color_sensor()
+
+    #roi
+    roi_sensor = profile.get_device().first_roi_sensor()
+
+    roi = roi_sensor.get_region_of_interest()
+    print(roi.min_x,roi.min_y,roi.max_x,roi.max_y)
+
+    roi = rs.region_of_interest()
+    roi.min_x = 600
+    roi.min_y = 0
+    roi.max_x = 800
+    roi.max_y = 100
+
+    # roi.min_x = 100
+    # roi.min_y = 100
+    # roi.max_x = 200
+    # roi.max_y = 200
+    roi_sensor.set_region_of_interest(roi)
+    color_sensor.set_option(rs.option.enable_auto_exposure, 1)
+
+
+    roi = roi_sensor.get_region_of_interest()
+    print("roi values:",roi.min_x, roi.min_y, roi.max_x, roi.max_y)
+    # trying to getting metadata
+    # frameset.get_depth_frame().get_frame_metadata(rs2_frame_metadata_value::RS2_FRAME_METADATA_ACTUAL_EXPOSURE) << std::endl;
+    actualFrameMetadata = frames.get_depth_frame().get_frame_metadata(rs.frame_metadata_value.actual_exposure)
+    print("actual_depth_exp=",actualFrameMetadata)
+    print(color_sensor.get_supported_options())
     # color sensor - turn on auto_ exposure and whBalance
-    color_sensor.set_option(rs.option.enable_auto_white_balance, True)
-    color_sensor.set_option(rs.option.enable_auto_exposure, True)
-
-    # prepare vars to output initial values
-
-
-    # set delta for exposure increment
-
+    color_sensor.set_option(rs.option.enable_auto_exposure, 1)
+    #color_sensor.set_option(rs.option.auto_exposure_priority,0.0)
+    sensorState = color_sensor.get_option(rs.option.enable_auto_exposure)
+    print('auto_exposure_color=',sensorState)
+    #color_sensor.set_option(rs.option.auto_exposure_priority, 1)
+    #ae_pr = color_sensor.get_option(rs.option.auto_exposure_priority)
+    #print(ae_pr)
     depth_sensor = profile.get_device().query_sensors()[0]
     depth_sensor.set_option(rs.option.enable_auto_exposure, True)
-
 
     time.sleep(1)
 
     exposure_value = depth_sensor.get_option(rs.option.exposure)  # Get exposure
-    gain_value = depth_sensor.get_option(rs.option.gain)  # Get exposure
-    print(exposure_value,gain_value)
 
+
+    depth_sensor.set_option(rs.option.emitter_enabled,False)  # Set laser emmtter off
+
+    emitter_enbld_value = depth_sensor.get_option(rs.option.emitter_enabled)  # Get laser
+    print('laser enabled', emitter_enbld_value)
+
+    gain_value = depth_sensor.get_option(rs.option.gain)  # Get exposure
+    print('exposure_value=',exposure_value,'gain_value=',gain_value)
+    align = rs.align(rs.stream.color)
+    frameset = align.process(frames)
     color_frame = frameset.get_color_frame()
+    # color_frame = frames.get_color_frame()
+
     depth_frame = frameset.get_depth_frame()
-    depth_frame2=depth_frame
+    depth_frame2 = depth_frame
     color = np.asanyarray(color_frame.get_data())
 
+    # color = np.asanyarray(color_sensor.get_data())
 
     colorizer = rs.colorizer()
     colorized_depth = np.asanyarray(colorizer.colorize(depth_frame).get_data())
@@ -144,9 +178,6 @@ while True:
     qualify_image = color_image
     depth_picture=depth_image
     pipeline.stop()
-
-
-
 
     # full_path = path + f
     # qualify_image = cv.imread(full_path)

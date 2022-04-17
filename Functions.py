@@ -6,6 +6,7 @@ from PIL.ImageOps import crop
 from pywinusb import hid
 from time import sleep
 import time
+
 import pyrealsense2 as rs
 import socket
 from statistics import median
@@ -56,6 +57,7 @@ tmodelWeights = os.path.join(os.path.dirname(__file__),"05_yolov3-tom2_best.weig
 # Initialize the camera
 pipeline = rs.pipeline()
 config = rs.config()
+rs.log_to_file(rs.log_severity.debug, file_path='./log.txt')
 config.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
 config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
 

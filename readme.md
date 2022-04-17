@@ -10,7 +10,9 @@
 ### TODO:
 
 check of green boxes side ratio h/w  
-
+enable autoexposure in color image
+emitter enable testing
+lase gain testing
 ## Basic classes
 
 * function coords(box,picture,picture,depth_frame,profile)
@@ -36,3 +38,8 @@ Added explosure and white balance options in 99:
     color_sensor.set_option(rs.option.exposure,1000)
     color_sensor.set_option(rs.option.enable_auto_exposure,True)
 ```
+
+
+## Emitter enabled
+
+This options you can find in cpp code of intelrealsense src\ds5\advanced_mode\advanced_mode.cpp

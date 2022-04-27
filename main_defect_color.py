@@ -80,107 +80,79 @@ files = os.listdir(path)
 
 # Start the main loop for the whole system
 # for f in files:
+profile = pipeline.start(config)
 while True:
-    # initialize camera objects
-    profile = pipeline.start(config)
     frames = pipeline.wait_for_frames()
+    # color sensor
+    color_sensor = profile.get_device().query_sensors()[1]
+    color_sensor.set_option(rs.option.enable_auto_exposure, 1)
+    align = rs.align(rs.stream.color)
+    frameset = align.process(frames)
+
     # advanced mode
-    path_to_settings_file='../default.json'
+    path_to_settings_file = '../hole_f_on.json'
     with open(path_to_settings_file, 'r') as file:
         json_text = file.read().strip()
     device = rs.context().devices[0]
     print(device)
     advanced_mode = rs.rs400_advanced_mode(device)
     advanced_mode.load_json(json_text)
-    print("advanced_mode.is_enabled=",advanced_mode.is_enabled())
+    print("advanced_mode.is_enabled=", advanced_mode.is_enabled())
     print(advanced_mode)
-    # print('ae_control:',advanced_mode.get_ae_control())
-    # color sensor
-    color_sensor = profile.get_device().query_sensors()[1]
-    color_sensor.set_option(rs.option.enable_auto_exposure, 1)
-    color_sensor.set_option(rs.option.enable_auto_exposure, 1)
-    #color_sensor = profile.get_device().first_color_sensor()
+    # Get aligned frames
+    depth_frame_filter = frameset.get_depth_frame()
+    # Sets up post processing filters
+    decimation_filter = rs.decimation_filter()
+    threshold_filter = rs.threshold_filter()
+    spatial_filter = rs.spatial_filter()
+    temporal_filter = rs.temporal_filter()
+    hole_filling_filter = rs.hole_filling_filter()
 
-    #roi
-    roi_sensor = profile.get_device().first_roi_sensor()
+    # Apply filters
+    # depth_frame_filter = decimation_filter.process(depth_frame_filter)
+    depth_frame_filter = threshold_filter.process(depth_frame_filter)
+    depth_frame_filter = spatial_filter.process(depth_frame_filter)
+    depth_frame_filter = temporal_filter.process(depth_frame_filter)
+    depth_frame_filter = hole_filling_filter.process(depth_frame_filter)
+    depth_img_filter = np.asanyarray(depth_frame_filter.get_data())
 
-    roi = roi_sensor.get_region_of_interest()
-    print(roi.min_x,roi.min_y,roi.max_x,roi.max_y)
-
-    roi = rs.region_of_interest()
-    roi.min_x = 600
-    roi.min_y = 0
-    roi.max_x = 800
-    roi.max_y = 100
-
-    # roi.min_x = 100
-    # roi.min_y = 100
-    # roi.max_x = 200
-    # roi.max_y = 200
-    roi_sensor.set_region_of_interest(roi)
-    color_sensor.set_option(rs.option.enable_auto_exposure, 1)
+    #color_frame = frames.get_color_frame()
+    color_frame = frameset.get_color_frame()
+    color_image = np.asanyarray(color_frame.get_data())
 
 
-    roi = roi_sensor.get_region_of_interest()
-    print("roi values:",roi.min_x, roi.min_y, roi.max_x, roi.max_y)
-    # trying to getting metadata
-    # frameset.get_depth_frame().get_frame_metadata(rs2_frame_metadata_value::RS2_FRAME_METADATA_ACTUAL_EXPOSURE) << std::endl;
-    actualFrameMetadata = frames.get_depth_frame().get_frame_metadata(rs.frame_metadata_value.actual_exposure)
-    print("actual_depth_exp=",actualFrameMetadata)
-    print(color_sensor.get_supported_options())
-    # color sensor - turn on auto_ exposure and whBalance
-    color_sensor.set_option(rs.option.enable_auto_exposure, 1)
-    #color_sensor.set_option(rs.option.auto_exposure_priority,0.0)
-    sensorState = color_sensor.get_option(rs.option.enable_auto_exposure)
-    print('auto_exposure_color=',sensorState)
-    #color_sensor.set_option(rs.option.auto_exposure_priority, 1)
-    #ae_pr = color_sensor.get_option(rs.option.auto_exposure_priority)
-    #print(ae_pr)
+
     depth_sensor = profile.get_device().query_sensors()[0]
     depth_sensor.set_option(rs.option.enable_auto_exposure, True)
 
-    time.sleep(1)
-
-    exposure_value = depth_sensor.get_option(rs.option.exposure)  # Get exposure
-
-
-    depth_sensor.set_option(rs.option.emitter_enabled,False)  # Set laser emmtter off
-
-    emitter_enbld_value = depth_sensor.get_option(rs.option.emitter_enabled)  # Get laser
-    print('laser enabled', emitter_enbld_value)
-
-    gain_value = depth_sensor.get_option(rs.option.gain)  # Get exposure
-    print('exposure_value=',exposure_value,'gain_value=',gain_value)
-    align = rs.align(rs.stream.color)
-    frameset = align.process(frames)
-    color_frame = frameset.get_color_frame()
-    # color_frame = frames.get_color_frame()
+    #exposure_value = depth_sensor.get_option(rs.option.exposure)  # Get exposure
+    #gain_value = depth_sensor.get_option(rs.option.gain)  # Get exposure
 
     depth_frame = frameset.get_depth_frame()
-    depth_frame2 = depth_frame
-    color = np.asanyarray(color_frame.get_data())
 
-    # color = np.asanyarray(color_sensor.get_data())
+
+    depth_image = np.asanyarray(depth_frame.get_data())
 
     colorizer = rs.colorizer()
     colorized_depth = np.asanyarray(colorizer.colorize(depth_frame).get_data())
-    colorized_depthColorMap=cv.applyColorMap(cv.convertScaleAbs(colorized_depth, alpha=14), cv.COLORMAP_OCEAN)
+    colorized_depthColorMap = cv.applyColorMap(cv.convertScaleAbs(colorized_depth, alpha=1), cv.COLORMAP_OCEAN)
 
-    depth_image = np.asanyarray(depth_frame.get_data())
-    cv.putText(colorized_depth, str("exposure="+str(exposure_value)), (50 - 30, 50 - 20), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 100), 2)
-    cv.putText(colorized_depth, str("gain="+str(gain_value)), (50 - 30, 100 - 20), cv.FONT_HERSHEY_SIMPLEX, 1, (100, 255, 100), 2)
+    cv.putText(colorized_depth, str("exposure=" + str("exposure_value")), (50 - 30, 50 - 20), cv.FONT_HERSHEY_SIMPLEX, 1,
+               (255, 255, 100), 2)
+    cv.putText(colorized_depth, str("gain=" + str("gain_value")), (50 - 30, 100 - 20), cv.FONT_HERSHEY_SIMPLEX, 1,
+               (100, 255, 100), 2)
 
-    plt.imshow(color)#, alpha=0.6)
-    plt.imshow(colorized_depth, alpha=0.9)
+    plt.imshow(color_image)#, alpha=0.6)
+    #plt.imshow(depth_image, alpha=0.8)
+    plt.imshow(colorized_depth, alpha=0.6)
     plt.show()
-        # break
-    color_image = np.asanyarray(color_frame.get_data())
-    qualify_image = color_image
-    depth_picture=depth_image
-    pipeline.stop()
+    #key = cv.waitKey(1)
 
     # full_path = path + f
-    # qualify_image = cv.imread(full_path)
+    qualify_image = color_image
+    depth_picture = depth_image
+    #pipeline.stop()
+
     qualify_depth = depth_picture.copy()
     qualify_result = qualify_image.copy()
 
@@ -231,7 +203,7 @@ while True:
     #     else:
     #         continue
 
-    result_image = getframe()
+    result_image = qualify_image #getframe()
     # weight_image = cv.imread(full_path)
     result = result_image.copy()
     show_process_image('Start weight', result)

@@ -1,4 +1,7 @@
 import optparse
+from builtins import print
+
+import cv2
 
 from Functions import*
 import matplotlib.pyplot as plt
@@ -109,10 +112,24 @@ while True:
     hole_filling_filter = rs.hole_filling_filter()
 
     # Apply filters
+    # output all options of filter
     # depth_frame_filter = decimation_filter.process(depth_frame_filter)
-    depth_frame_filter = threshold_filter.process(depth_frame_filter)
-    depth_frame_filter = spatial_filter.process(depth_frame_filter)
-    depth_frame_filter = temporal_filter.process(depth_frame_filter)
+    #depth_frame_filter = threshold_filter.process(depth_frame_filter)
+    #depth_frame_filter = spatial_filter.process(depth_frame_filter)
+    #depth_frame_filter = temporal_filter.process(depth_frame_filter)
+    # hole_filling_filter.set_option(rs.option.holes_fill,1)
+    # hole_filling_filter.set_option(rs.option.frames_queue_size,0)
+    # hole_filling_filter.set_option(rs.option.stream_filter,0)
+    # hole_filling_filter.set_option(rs.option.stream_format_filter,1)
+    # hole_filling_filter.set_option(rs.option.stream_index_filter,50)
+
+
+    print(hole_filling_filter.get_supported_options())
+    for opt in hole_filling_filter.get_supported_options():
+        print(opt,hole_filling_filter.get_option_range(opt))
+    # [ < option.frames_queue_size: 19 >, < option.holes_fill: 39 >,
+    # < option.stream_filter: 43 >, < option.stream_format_filter: 44 >, < option.stream_index_filter: 45 >]
+
     depth_frame_filter = hole_filling_filter.process(depth_frame_filter)
     depth_img_filter = np.asanyarray(depth_frame_filter.get_data())
 
@@ -128,14 +145,14 @@ while True:
     #exposure_value = depth_sensor.get_option(rs.option.exposure)  # Get exposure
     #gain_value = depth_sensor.get_option(rs.option.gain)  # Get exposure
 
-    depth_frame = frameset.get_depth_frame()
+    depth_frame = depth_frame_filter# frameset.get_depth_frame()
 
 
-    depth_image = np.asanyarray(depth_frame.get_data())
+    depth_image = depth_img_filter#np.asanyarray(depth_frame.get_data())
 
     colorizer = rs.colorizer()
     colorized_depth = np.asanyarray(colorizer.colorize(depth_frame).get_data())
-    colorized_depthColorMap = cv.applyColorMap(cv.convertScaleAbs(colorized_depth, alpha=1), cv.COLORMAP_OCEAN)
+    colorized_depthColorMap = cv.applyColorMap(cv.convertScaleAbs(colorized_depth, alpha=1.5), cv2.COLORMAP_JET)
 
     cv.putText(colorized_depth, str("exposure=" + str("exposure_value")), (50 - 30, 50 - 20), cv.FONT_HERSHEY_SIMPLEX, 1,
                (255, 255, 100), 2)

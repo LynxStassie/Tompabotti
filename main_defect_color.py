@@ -2,10 +2,23 @@ import optparse
 from builtins import print
 
 import cv2
+from datetime import datetime
+
+from numpy import dtype
 
 from Functions import*
 import matplotlib.pyplot as plt
 
+def now():
+    # datetime object containing current date and time
+    now = datetime.now()
+
+    # print("now =", now)
+
+    # dd/mm/YY H:M:S
+    dt_string = now.strftime("%d-%m-%Y_%H-%M-%S")
+    # print("date and time =", dt_string)
+    return dt_string
 # Get the names of the output layers
 def getOutputsNames(net):
     # Get the names of all the layers in the network
@@ -83,9 +96,19 @@ files = os.listdir(path)
 
 # Start the main loop for the whole system
 # for f in files:
+cnt_im=0
 profile = pipeline.start(config)
 while True:
     frames = pipeline.wait_for_frames()
+    #intr = rs.video_stream.intrinsics.fx
+    #intrfx = profile.get_stream(rs.stream.depth)
+    #print("intrinsic fx ", intrfx)
+    #intrfy = rs.intrinsics.fy
+    #print("intrinsic fy ", intrfy)
+    #intr1 = rs.intrinsics.ppx
+    #print ("ppx ", intr1)
+    #intr2 = rs.intrinsics.ppy
+    #print("ppy ", intr2)
     # color sensor
     color_sensor = profile.get_device().query_sensors()[1]
     color_sensor.set_option(rs.option.enable_auto_exposure, 1)
@@ -93,7 +116,7 @@ while True:
     frameset = align.process(frames)
 
     # advanced mode
-    path_to_settings_file = '../hole_f_on.json'
+    path_to_settings_file = '../med_den.json'#'../hole_f_on.json'
     with open(path_to_settings_file, 'r') as file:
         json_text = file.read().strip()
     device = rs.context().devices[0]
@@ -104,40 +127,29 @@ while True:
     print(advanced_mode)
     # Get aligned frames
     depth_frame_filter = frameset.get_depth_frame()
-    # Sets up post processing filters
-    decimation_filter = rs.decimation_filter()
-    threshold_filter = rs.threshold_filter()
-    spatial_filter = rs.spatial_filter()
-    temporal_filter = rs.temporal_filter()
-    hole_filling_filter = rs.hole_filling_filter()
-
-    # Apply filters
-    # output all options of filter
-    # depth_frame_filter = decimation_filter.process(depth_frame_filter)
-    #depth_frame_filter = threshold_filter.process(depth_frame_filter)
-    #depth_frame_filter = spatial_filter.process(depth_frame_filter)
-    #depth_frame_filter = temporal_filter.process(depth_frame_filter)
-    # hole_filling_filter.set_option(rs.option.holes_fill,1)
-    # hole_filling_filter.set_option(rs.option.frames_queue_size,0)
-    # hole_filling_filter.set_option(rs.option.stream_filter,0)
-    # hole_filling_filter.set_option(rs.option.stream_format_filter,1)
-    # hole_filling_filter.set_option(rs.option.stream_index_filter,50)
 
 
-    print(hole_filling_filter.get_supported_options())
-    for opt in hole_filling_filter.get_supported_options():
-        print(opt,hole_filling_filter.get_option_range(opt))
-    # [ < option.frames_queue_size: 19 >, < option.holes_fill: 39 >,
-    # < option.stream_filter: 43 >, < option.stream_format_filter: 44 >, < option.stream_index_filter: 45 >]
-
-    depth_frame_filter = hole_filling_filter.process(depth_frame_filter)
-    depth_img_filter = np.asanyarray(depth_frame_filter.get_data())
 
     #color_frame = frames.get_color_frame()
     color_frame = frameset.get_color_frame()
     color_image = np.asanyarray(color_frame.get_data())
+    cnt_im+=1
+    #====saving image
+    # Image directory
+    directory = r'D:\tomato_images'
+    # List files and directories
+    filename =directory + '\\'+'im' + str(now()) + '.jpg'
+    # Saving the image
+    cv2.imwrite(filename, color_image)
+    print(filename)
 
+    # List files and directories
+    # in 'C:/Users / Rajnish / Desktop / GeeksforGeeks'
+    print("After saving image:")
+    print(os.listdir(directory))
 
+    print('Successfully saved')
+    #====saving image
 
     depth_sensor = profile.get_device().query_sensors()[0]
     depth_sensor.set_option(rs.option.enable_auto_exposure, True)
@@ -145,10 +157,10 @@ while True:
     #exposure_value = depth_sensor.get_option(rs.option.exposure)  # Get exposure
     #gain_value = depth_sensor.get_option(rs.option.gain)  # Get exposure
 
-    depth_frame = depth_frame_filter# frameset.get_depth_frame()
+    depth_frame = frameset.get_depth_frame()
 
 
-    depth_image = depth_img_filter#np.asanyarray(depth_frame.get_data())
+    depth_image = np.asanyarray(depth_frame.get_data())
 
     colorizer = rs.colorizer()
     colorized_depth = np.asanyarray(colorizer.colorize(depth_frame).get_data())
@@ -224,6 +236,8 @@ while True:
     # weight_image = cv.imread(full_path)
     result = result_image.copy()
     show_process_image('Start weight', result)
+
+
 
 # Press 'q to stop
     key = cv.waitKey(1) & 0xFF

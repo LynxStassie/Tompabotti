@@ -600,6 +600,7 @@ def coords(tomato_boxes, color_image, result_image, depth_image,colorized_image,
             x_label = 'x:%.d' % x_coord
             y_label = 'y:%.d' % y_coord
             z_label = 'z:%.3f' % distance
+            print('coords=',x_coord,y_coord,'%.3f' % distance)
             cv.circle(result_image, (i, j), 4, (0, 0, 255), 5)
             cv.putText(result_image, x_label, (i - 30, j - 20), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             cv.putText(result_image, y_label, (i - 30, j), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
@@ -607,6 +608,16 @@ def coords(tomato_boxes, color_image, result_image, depth_image,colorized_image,
             plt.imshow(result_image)
             plt.show()
     return []
+
+def getFileName(directory ):
+    numberLoops = 5000 # some limit determined by the user
+    currentLoop = 1
+    while currentLoop < numberLoops:
+        currentLoop = currentLoop + 1
+
+        fileName = ("im%d.jpg" % (currentLoop))
+    return directory+ '/'+ fileName
+
 
 def getDist(xmin, ymin,xmax, ymax):
     # Setup:

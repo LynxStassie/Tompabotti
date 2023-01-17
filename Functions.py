@@ -3,11 +3,10 @@ import cv2 as cv
 import numpy as np
 import keyboard
 from PIL.ImageOps import crop
-from pywinusb import hid
+#from pywinusb import hid
 from time import sleep
 import time
-
-import pyrealsense2 as rs
+from datetime import datetime
 import socket
 from statistics import median
 from math import sqrt
@@ -16,7 +15,7 @@ from itertools import count
 import matplotlib.pyplot as plt
 import time
 
-from pyrealsense2.pyrealsense2 import option
+show=False
 
 image_name_counter = 0
 
@@ -47,19 +46,14 @@ with open(dclassesFile, 'rt') as f:
     dclasses = f.read().rstrip('\n').split('\n')
 
 # Give the configuration and weight files for the model and load the network using them.
-dmodelConfiguration = os.path.join(os.path.dirname(__file__),"yolov3_tiny_3l_mod.cfg")
-dmodelWeights =os.path.join(os.path.dirname(__file__),"12_yolov3_tiny_3l_mod_best.weights")
+# for defects
+# dmodelConfiguration = os.path.join(os.path.dirname(__file__),"yolov3_tiny_3l_mod.cfg")  #yolov3_tiny_3l_mod.cfg
+# dmodelWeights =os.path.join(os.path.dirname(__file__),"12_yolov3_tiny_3l_mod_best.weights") # pre trained ?   #12_yolov3_tiny_3l_mod_best.weights
 
+# for tomatoes
 # Give the configuration and weight files for the model and load the network using them.
-tmodelConfiguration = os.path.join(os.path.dirname(__file__),"yolov3-tom2.cfg")
-tmodelWeights = os.path.join(os.path.dirname(__file__),"05_yolov3-tom2_best.weights")
-
-# Initialize the camera
-pipeline = rs.pipeline()
-config = rs.config()
-rs.log_to_file(rs.log_severity.debug, file_path='./log.txt')
-config.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
-config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
+tmodelConfiguration = os.path.join(os.path.dirname(__file__),"yolov3-tom2.cfg") # yolov3-tom2.cfg  #label studio dataset and colab yolov3 training
+tmodelWeights = os.path.join(os.path.dirname(__file__),"05_yolov3-tom2_best.weights")  # 05_yolov3-tom2_best.weights
 
 def set_short_range(depth_sensor):
 #    depth_sensor.set_option(option.alternate_ir, 0.0)
@@ -223,14 +217,16 @@ def show_process_image(window_name, image):
     cv.destroyAllWindows()
     cv.imshow(window_name,image)
     im = Image.fromarray(image)
-    # global image_name_counter
-    # image_name_counter = image_name_counter + 1
-    # target dir - dirpath that in dirname
-    # C:\Users\123456\Tompabotti\Tomato_project\Results_photo
-    # dirpath=os.path.join(os.path.dirname(__file__))
-    # dirname='Results_photo'
-    # filename='tomato.jpeg'
-    # im.save(os.path.join(os.path.join(dirpath, dirname ).replace('Program\\',''), str(image_name_counter) + filename ))
+
+    #results photo save
+    #global image_name_counter
+    #image_name_counter = image_name_counter + 1
+    #target dir - dirpath that in dirname
+    #C:\Users\123456\Tompabotti\Tomato_project\Results_photo
+    #dirpath=os.path.join(os.path.dirname(__file__))
+    #dirname='Results_photo'
+    #filename='detected.jpeg'
+    #im.save(os.path.join(os.path.join(dirpath, dirname ).replace('Program\\',''), str(image_name_counter) + filename ))
     cv.waitKey(1)
 
 #####################################WEIGHT#####################################
@@ -544,8 +540,48 @@ def pedicel_info_process(tomato_boxes, color_image, result_image):
 
     return pedicel_tomato_coordinates
 
+def now():
+    # datetime object containing current date and time
+    now = datetime.now()
 
-def coords(tomato_boxes, color_image, result_image, depth_image,colorized_image,profile):
+    # print("now =", now)
+
+    # dd/mm/YY H:M:S
+    dt_string = now.strftime("%d-%m-%Y_%H-%M-%S")
+    # print("date and time =", dt_string)
+    return dt_string
+
+def saveImage(color_image):
+    # ====saving image
+    # Image directory
+    directory = r'D:\tomato_images'
+    # List files and directories
+    filename = directory + '\\' + 'im' + str(now()) + '.jpg'  # current date time value
+    # Saving the image
+    cv.imwrite(filename, color_image)
+    print(filename, 'saved')
+    # ====saving image
+
+# ### Converting 2D image coordinates to 3D coordinates using ROS + Intel Realsense D435/Kinect #######
+#
+# def convert_depth_to_phys_coord_using_realsense(x, y, depth, cameraInfo):
+#   _intrinsics = rs.intrinsics()
+#   _intrinsics.width = cameraInfo.width
+#   _intrinsics.height = cameraInfo.height
+#   _intrinsics.ppx = cameraInfo.K[2]
+#   _intrinsics.ppy = cameraInfo.K[5]
+#   _intrinsics.fx = cameraInfo.K[0]
+#   _intrinsics.fy = cameraInfo.K[4]
+#   #_intrinsics.model = cameraInfo.distortion_model
+#   _intrinsics.model  = rs.distortion.none
+#   _intrinsics.coeffs = [i for i in cameraInfo.D]
+#   result = rs.rs2_deproject_pixel_to_point(_intrinsics, [x, y], depth)
+#   #result[0]: right, result[1]: down, result[2]: forward
+#   return result[2], -result[0], -result[1]
+# ##################################################################################################
+
+# detect pixel coordinates
+def coords(tomato_boxes, color_image, result_image):
     # find center of box from tomato_boxes
     # coordinates x , y - pixel coordinates, box center
     #cv.imshow("title", depth_image)
@@ -554,6 +590,8 @@ def coords(tomato_boxes, color_image, result_image, depth_image,colorized_image,
 
     else:
         for tomato_box in tomato_boxes:
+            saveImage(result_image)
+
             # Crop the images to detect pedicel in the crop
             xmin = tomato_box[0]
             ymin = tomato_box[1]
@@ -565,7 +603,7 @@ def coords(tomato_boxes, color_image, result_image, depth_image,colorized_image,
             cv.circle(result_image, (m, n), 4, (0, 255, 255), 5)
 
             (i, j) = (m,n)#pedicel_coor_convert(tomato_box, pedicel[0], pedicel[2])
-            print('coordinate detected')
+            #print('coordinate detected')
             # Print out coordinates
             x_coord = (m,n)[0]
             y_coord = (m,n)[1]
@@ -573,40 +611,25 @@ def coords(tomato_boxes, color_image, result_image, depth_image,colorized_image,
             cv.circle(color_image, (m, n), 4, (255, 255, 255), 5)
             #cv.circle(depth_image, (m, n), 4, (255, 255, 255), 5)
             # depth = depth_image[n, m].astype(float)
-            print("gettting center coords ", n , m)
-            depth_sensor = profile.get_device().first_depth_sensor()
-            depth_scale = depth_sensor.get_depth_scale()
+            #print("gettting center coords ", n , m)
+            #depth_sensor = profile.get_device().first_depth_sensor()
+            #depth_scale = depth_sensor.get_depth_scale()
             title = 'mouse event'
-            depth_colormap = cv.applyColorMap(cv.convertScaleAbs(depth_image, alpha=0.8), cv.COLORMAP_JET)
-            cv.circle(colorized_image, (m, n), 4, (255, 255, 255), 5)
-            # cv.circle(colorized_image, (xmin, ymin), 4, (0, 0, 255), 5)
-            # cv.circle(colorized_image, (xmin, ymax), 4, (255, 0, 0), 5)
-            # cv.circle(colorized_image, (xmax, ymin), 4, (0, 255, 0), 5)
-            # cv.circle(colorized_image, (xmax, ymax), 4, (0, 255, 0), 5)
-            # list_of_points = [(m, n),(xmin, ymin),(xmin, ymax),(xmax, ymin),(xmax, ymax)]
-            # cv.imshow(title, color_image)
-            # cv.imshow(title, colorized_image)
-            # plt.figure(figsize=(10, 10))
-            plt.imshow(color_image)
-            plt.imshow(colorized_image, alpha=0.6)
-            plt.show()
-            show_process_image("1",colorized_image)
-            depth = depth_image[n, m].astype(float)
-            print("point:", n, m)
-            distance = depth * depth_scale
-            print('x:', x_coord)#cut_coordinate[0])
-            print('y:', y_coord)#cut_coordinate[1])
-            print('z:', distance)
-            x_label = 'x:%.d' % x_coord
-            y_label = 'y:%.d' % y_coord
-            z_label = 'z:%.3f' % distance
-            print('coords=',x_coord,y_coord,'%.3f' % distance)
-            cv.circle(result_image, (i, j), 4, (0, 0, 255), 5)
-            cv.putText(result_image, x_label, (i - 30, j - 20), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            cv.putText(result_image, y_label, (i - 30, j), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            cv.putText(result_image, z_label, (i - 30, j + 20), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            plt.imshow(result_image)
-            plt.show()
+            #depth_colormap = cv.applyColorMap(cv.convertScaleAbs(depth_image, alpha=0.8), cv.COLORMAP_JET)
+            if show:
+                plt.imshow(color_image)
+                #plt.imshow(colorized_image, alpha=0.6)
+                #plt.show()
+                #show_process_image("1",colorized_image)
+            #print('x:', x_coord)#cut_coordinate[0])
+            #print('y:', y_coord)#cut_coordinate[1])
+            #print('z:', distance)
+            print('coords (X,Y) =',x_coord,y_coord)
+            #if show:
+                #plt.imshow(result_image)
+                #plt.show()
+            #coordinates_for_tomato = (x_coord, y_coord, distance)
+            return (x_coord, y_coord)   # return tuple of coordinates
     return []
 
 def getFileName(directory ):
@@ -618,6 +641,7 @@ def getFileName(directory ):
         fileName = ("im%d.jpg" % (currentLoop))
     return directory+ '/'+ fileName
 
+# open json file and show in console with pretty print
 
 def getDist(xmin, ymin,xmax, ymax):
     # Setup:
@@ -673,7 +697,7 @@ def getDist(xmin, ymin,xmax, ymax):
     #depth = depth[xmin_depth:xmax_depth,ymin_depth:ymax_depth].astype(float)
     depth_colormap = cv.applyColorMap(cv.convertScaleAbs(depth, alpha=1), cv.COLORMAP_JET)
     # Get data scale from the device and convert to meters
-    depth_scale = profile.get_device().first_depth_sensor().get_depth_scale()
+    #depth_scale = profile.get_device().first_depth_sensor().get_depth_scale()
     print(depth_scale)
     depth = depth_colormap * depth_scale
     dist,_,_,_ = cv.mean(depth)
